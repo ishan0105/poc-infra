@@ -16,7 +16,6 @@ Resources:
           - Id: "MyOrigin"
             DomainName: "ui-artifacts-poc-zero-downtime.s3.eu-west-1.amazonaws.com"  # Replace with your S3 bucket or custom domain
             OriginAccessControlId: "test-ui-artifacts-poc-zero-downtime"  # Attach the OAC
-            # OriginPath: "/"
             S3OriginConfig:
               OriginAccessIdentity: ""
             OriginAccessControlId: !Ref MyOriginAccessControl  # You can specify an OAI if using S3 origin
@@ -32,6 +31,5 @@ Resources:
             QueryString: "false"
             Cookies:
               Forward: "none"
-        # PriceClass: "PriceClass_All"  # Choose pricing class as per needs
         DefaultRootObject: "index.html"  # The object to serve by default
 
