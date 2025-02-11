@@ -12,8 +12,8 @@ Resources:
     Properties:
       TemplateURL: ./s3.yml
       TimeoutInMinutes: 30
-  cloudfront:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./cloudfront.yml
-      TimeoutInMinutes: 30
+  # cloudfront:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: ./cloudfront.yml
+  #     TimeoutInMinutes: 30
