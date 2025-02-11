@@ -394,9 +394,6 @@ Resources:
            - Name: UIARTIFACTBUCKETNAME
              Type: PLAINTEXT
              Value: !Ref UIBuildArtifactsStoreBucket
-          #  - Name: POCVERSION
-          #    Type: PLAINTEXT
-          #    Value: "v1"  # Modify this at runtime to pass different directory names
       TimeoutInMinutes: 90
 
 #API codebuild
