@@ -348,7 +348,7 @@ Resources:
       Description: Infrastructure CloudFormation Build & Packaging
       Source:
         Type: GITHUB
-        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-infra"
+        Location: !Sub "https://github.com/urmila-purohit/poc-infra"
         BuildSpec: !Sub "buildspec/config.yml"
         GitCloneDepth: 1
       Name: zero-downtime-poc-infrastructure
@@ -372,7 +372,7 @@ Resources:
     Properties:
       Source:
         Type: GITHUB
-        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-ui"
+        Location: !Sub "https://github.com/urmila-purohit/poc-ui"
         BuildSpec: !Sub "buildspec/ui-config.yml"
         GitCloneDepth: 1
       SourceVersion: !Ref BranchName
@@ -402,7 +402,7 @@ Resources:
     Properties:
       Source:
         Type: GITHUB
-        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-api"
+        Location: !Sub "https://github.com/urmila-purohit/poc-api"
         BuildSpec: !Sub "buildspec/api-config.yml"
         GitCloneDepth: 1
       SourceVersion: !Ref BranchName
@@ -428,7 +428,7 @@ Resources:
       Description: Code Build for Smoke tests
       Source:
         Type: GITHUB
-        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-smoketest"
+        Location: !Sub "https://github.com/urmila-purohit/poc-smoketest"
         BuildSpec: !Sub "buildspec/smoketest.yml"
         GitCloneDepth: 1
       Name: zero-downtime-poc-smoke-test
@@ -449,7 +449,7 @@ Resources:
       Description: Code Build for Smoke tests
       Source:
         Type: GITHUB
-        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-db"
+        Location: !Sub "https://github.com/urmila-purohit/poc-db"
         BuildSpec: !Sub "buildspec/db.yml"
         GitCloneDepth: 1
       Name: zero-downtime-poc-database
