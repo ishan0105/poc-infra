@@ -402,7 +402,7 @@ Resources:
     Properties:
       Source:
         Type: GITHUB
-        Location: !Sub "https://github.com/urmila-purohit/poc-api"
+        Location: !Sub "https://github.com/ishan0105/poc-api"
         BuildSpec: !Sub "buildspec/api-config.yml"
         GitCloneDepth: 1
       SourceVersion: !Ref BranchName
