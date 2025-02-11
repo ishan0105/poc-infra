@@ -1,0 +1,579 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: API Gateway without any methods
+
+Parameters:
+  BranchName:
+    Description: Branch name
+    Type: String
+    Default: "v1"
+
+Resources:
+
+  CodeBuildRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Principal:
+              Service:
+                - 'codebuild.amazonaws.com'
+            Effect: Allow
+        Version: 2012-10-17
+      Description: Grant AWS services access to Code Build
+      Path: /
+      Policies:
+        - PolicyName: zero-downtime-poc-code-build-admin-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action: '*'
+                Effect: Allow
+                Resource: '*'
+      RoleName: 'zero-downtime-poc-code-build-role'
+      Tags:
+        - Key: 'zero-downtime-poc-code-build-role'
+          Value: 'zero-downtime-poc-code-build-role'
+
+  CodePipelineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - 'codepipeline.amazonaws.com'
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: zero-downtime-poc-code-pipeline-admin-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - '*'
+                Effect: Allow
+                Resource: '*'
+      RoleName: 'zero-downtime-poc-code-pipeline-role'
+      Tags:
+        - Key: 'zero-downtime-poc-code-pipeline-role'
+          Value: 'zero-downtime-poc-code-pipeline-role'
+
+  CloudFormationRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - 'cloudformation.amazonaws.com'
+        Version: '2012-10-17'
+      Path: '/'
+      Policies:
+        - PolicyName: zero-downtime-poc-cloud-formation-admin-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action: '*'
+                Effect: Allow
+                Resource: '*'
+      RoleName: 'zero-downtime-poc-cloud-formation-role'
+      Tags:
+        - Key: 'zero-downtime-poc-cloud-formation-role'
+          Value: 'zero-downtime-poc-cloud-formation-role'
+
+  SSMCodePipelineRole:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Type: String
+      Description: !Sub "Code Pipeline Role ARN"
+      Value: !GetAtt CodePipelineRole.Arn
+      Name: "/zero-downtime-poc/codepipelinerole/arn"
+
+  CloudFormationPackageS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: zero-downtime-poc-cloudformation-scripts
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+  SSMCloudFormationBucket:
+    DependsOn: CloudFormationPackageS3Bucket
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Type: String
+      Description: !Sub 'Value of S3 bucket cloudformation-scripts'
+      Value: !Ref CloudFormationPackageS3Bucket
+      Name: '/zero-downtime-poc/s3/cloudformation-scripts'
+         
+  ArtifactStoreS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: zero-downtime-poc-devops-artifact
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+  SSMArtifactBucket:
+    DependsOn: ArtifactStoreS3Bucket
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Type: String
+      Value: !Ref ArtifactStoreS3Bucket
+      Name: '/zero-downtime-poc/s3/devops-artifacts'
+
+  SSMArtifactBucketArn:
+    DependsOn: ArtifactStoreS3Bucket
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Type: String
+      Description: !Sub 'Arn of S3 bucket for DevOps artifacts'
+      Value: !GetAtt ArtifactStoreS3Bucket.Arn
+      Name: '/zero-downtime-poc/s3/devops-artifacts/arn'
+
+  smoketestS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: zero-downtime-poc-smoketest-script
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+  databaseS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: zero-downtime-poc-database
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+#source
+  InfrastructureZeroDowntimeBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: infrastructure-source-poc-zero-downtime
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+#source
+  UIZeroDowntimeBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: ui-source-poc-zero-downtime
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+
+#source
+  APIZeroDowntimeBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: api-source-poc-zero-downtime
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+#versio1
+  UIBuildArtifactsStoreBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: ui-artifacts-poc-zero-downtime
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      WebsiteConfiguration:
+        IndexDocument: index.html  # The default document (can be any HTML file)
+        ErrorDocument: error.html
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref UIBuildArtifactsStoreBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontServicePrincipal"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Action: "s3:GetObject"
+            Resource: !Sub "arn:aws:s3:::${UIBuildArtifactsStoreBucket}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: "arn:aws:cloudfront::057297422439:distribution/E15ISXOPW45Z64"
+
+#version2
+  UIBuildArtifactsStoreBucketversion2:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: ui-artifacts-poc-zero-downtime-version-2
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      WebsiteConfiguration:
+        IndexDocument: index.html  # The default document (can be any HTML file)
+        ErrorDocument: error.html
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+  BucketPolicyversion2:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref UIBuildArtifactsStoreBucketversion2
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontServicePrincipal"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Action: "s3:GetObject"
+            Resource: !Sub "arn:aws:s3:::${UIBuildArtifactsStoreBucketversion2}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: "arn:aws:cloudfront::057297422439:distribution/E15ISXOPW45Z64"
+
+
+#infra codebuild
+  InfrastructureCodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Description: Infrastructure CloudFormation Build & Packaging
+      Source:
+        Type: GITHUB
+        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-infra"
+        BuildSpec: !Sub "buildspec/config.yml"
+        GitCloneDepth: 1
+      Name: zero-downtime-poc-infrastructure
+      Artifacts:
+        Location: !Ref ArtifactStoreS3Bucket
+        Name: 'zero-downtime-poc-infrastructure.zip'
+        NamespaceType: NONE
+        OverrideArtifactName: true
+        Packaging: ZIP
+        Type: S3
+      ServiceRole: !Ref CodeBuildRole
+      QueuedTimeoutInMinutes: 30
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/standard:6.0"
+        Type: LINUX_CONTAINER
+      TimeoutInMinutes: 15
+
+  UICodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Source:
+        Type: GITHUB
+        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-ui"
+        BuildSpec: !Sub "buildspec/ui-config.yml"
+        GitCloneDepth: 1
+      SourceVersion: !Ref BranchName
+      Name: zero-downtime-poc-ui
+      Artifacts:
+        Location: !Ref UIBuildArtifactsStoreBucket
+        Name: 'zero-downtime-poc-ui.zip'
+        NamespaceType: NONE
+        OverrideArtifactName: true
+        Packaging: ZIP
+        Type: S3
+      ServiceRole: !Ref CodeBuildRole
+      QueuedTimeoutInMinutes: 60
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/standard:6.0"
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+           - Name: UIARTIFACTBUCKETNAME
+             Type: PLAINTEXT
+             Value: !Ref UIBuildArtifactsStoreBucket
+          #  - Name: POCVERSION
+          #    Type: PLAINTEXT
+          #    Value: "v1"  # Modify this at runtime to pass different directory names
+      TimeoutInMinutes: 90
+
+#API codebuild
+  APICodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Source:
+        Type: GITHUB
+        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-api"
+        BuildSpec: !Sub "buildspec/api-config.yml"
+        GitCloneDepth: 1
+      SourceVersion: !Ref BranchName
+      Name: zero-downtime-poc-api
+      Artifacts:
+        Location: !Ref ArtifactStoreS3Bucket
+        Name: 'zero-downtime-poc-api.zip'
+        NamespaceType: NONE
+        OverrideArtifactName: true
+        Packaging: ZIP
+        Type: S3
+      ServiceRole: !Ref CodeBuildRole
+      QueuedTimeoutInMinutes: 60
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/standard:7.0"
+        Type: LINUX_CONTAINER
+      TimeoutInMinutes: 90
+
+  SmokeTestCodeBuild:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Description: Code Build for Smoke tests
+      Source:
+        Type: GITHUB
+        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-smoketest"
+        BuildSpec: !Sub "buildspec/smoketest.yml"
+        GitCloneDepth: 1
+      Name: zero-downtime-poc-smoke-test
+      Artifacts:
+        Type: NO_ARTIFACTS
+      ServiceRole: !Ref CodeBuildRole
+      QueuedTimeoutInMinutes: 30
+      Environment:
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: "aws/codebuild/standard:7.0"
+        Type: LINUX_CONTAINER
+      TimeoutInMinutes: 90
+
+
+  DatabaseCodeBuild:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Description: Code Build for Smoke tests
+      Source:
+        Type: GITHUB
+        Location: !Sub "https://github.com/IshanBhattTatvasoft/poc-db"
+        BuildSpec: !Sub "buildspec/db.yml"
+        GitCloneDepth: 1
+      Name: zero-downtime-poc-database
+      Artifacts:
+        Type: NO_ARTIFACTS
+      ServiceRole: !Ref CodeBuildRole
+      QueuedTimeoutInMinutes: 30
+      Environment:
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: "aws/codebuild/standard:7.0"
+        Type: LINUX_CONTAINER
+      TimeoutInMinutes: 90
+
+  SinglePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      # Description: Codepipeline
+      ArtifactStore:
+        Location: !Ref ArtifactStoreS3Bucket
+        Type: S3
+      Name: zero-downtime-poc-single-pipeline
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      RestartExecutionOnUpdate: false
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Infra-Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: S3
+                Version: '1'
+              Configuration:
+                S3Bucket: !Sub '${ArtifactStoreS3Bucket}'
+                PollForSourceChanges: false
+                S3ObjectKey: zero-downtime-poc-infrastructure.zip
+              OutputArtifacts:
+                - Name: zero-downtime-poc-Infrastructure-SourceOutput
+              RunOrder: '1'
+            # - Name: UI-Source
+            #   ActionTypeId:
+            #     Category: Source
+            #     Owner: AWS
+            #     Provider: S3
+            #     Version: '1'
+            #   Configuration:
+            #     S3Bucket: !Sub '${ArtifactStoreS3Bucket}'
+            #     PollForSourceChanges: false
+            #     S3ObjectKey: zero-downtime-poc-ui.zip
+            #   OutputArtifacts:
+            #     - Name: zero-downtime-poc-UI-SourceOutput
+            #   RunOrder: '1'
+            # - Name: API-Source
+            #   ActionTypeId:
+            #     Category: Source
+            #     Owner: AWS
+            #     Provider: S3
+            #     Version: '1'
+            #   Configuration:
+            #     S3Bucket: !Sub '${ArtifactStoreS3Bucket}'
+            #     PollForSourceChanges: false
+            #     S3ObjectKey: zero-downtime-poc-api.zip
+            #   OutputArtifacts:
+            #     - Name: zero-downtime-poc-API-SourceOutput
+            #   RunOrder: '1'
+
+        - Name: Manual-approval1
+          Actions:
+            - Name: approval
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: '1'
+              Configuration:
+                CustomData: "test"
+              RunOrder: '1'
+        - Name: Infrastructure-deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: zero-downtime-poc-Infrastructure-SourceOutput
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                StackName: "poc-infra"
+                Capabilities: CAPABILITY_NAMED_IAM
+                ChangeSetName: "poc-Infrastructure-Update"
+                TemplatePath: "zero-downtime-poc-Infrastructure-SourceOutput::main.template"
+                # TemplateConfiguration: "Infrastructure-SourceOutput::jhgj-config.json"
+              RunOrder: "2"
+        # - Name: UI-deploy
+        #   Actions:
+        #     - Name: Deploy
+        #       ActionTypeId:
+        #         Category: Deploy
+        #         Owner: AWS
+        #         Provider: S3
+        #         Version: "1"
+        #       InputArtifacts:
+        #         - Name: zero-downtime-poc-UI-SourceOutput
+        #       Configuration:
+        #         BucketName: !Ref UIBuildArtifactsStoreBucket
+        #         Extract: true
+        #       RunOrder: "2"
+        # - Name: API-deploy
+        #   Actions:
+        #     - Name: Deploy
+        #       ActionTypeId:
+        #         Category: Deploy
+        #         Owner: AWS
+        #         Provider: S3
+        #         Version: "1"
+        #       InputArtifacts:
+        #         - Name: zero-downtime-poc-API-SourceOutput
+        #       Configuration:
+        #         BucketName: !Ref UIBuildArtifactsStoreBucket
+        #         Extract: true
+        #       RunOrder: "4"

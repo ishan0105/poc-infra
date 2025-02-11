@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Lion Heart Infrastructure
+
+Resources:
+  TestAPIGateway:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./apigateway.yml
+      TimeoutInMinutes: 30
+  s3buckets:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./s3.yml
+      TimeoutInMinutes: 30
+  cloudfront:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./cloudfront.yml
+      TimeoutInMinutes: 30

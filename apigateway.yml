@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: API Gateway without any methods
+
+Resources:
+  pocApiGateway1:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: poc-api-gateway-1
+      Description: API Gateway created using CloudFormation
+  pocApiGateway2:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: poc-api-gateway-2
+      Description: API Gateway created using CloudFormation
+
+
+  SSMApiGatewayId1:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Type: String
+      Description: API Gateway 1 Id 
+      Value: !Ref pocApiGateway1
+      Name: !Sub "/poc/apigateway1/id"
+  SSMApiGatewayId2:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Type: String
+      Description: API Gateway 2 Id 
+      Value: !Ref pocApiGateway2
+      Name: !Sub "/poc/apigateway2/id"

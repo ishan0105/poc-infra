@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: To create S3 folder and respective SSM parameter
+
+Resources:
+  SourceS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "testcdsdfhslkdf"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # TargetS3Bucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: "zdjfhslkdfnskldfs"
+  #     PublicAccessBlockConfiguration:
+  #       BlockPublicAcls: false
+  #       BlockPublicPolicy: false
+  #       IgnorePublicAcls: false
+  #       RestrictPublicBuckets: false
+  #     WebsiteConfiguration:
+  #       IndexDocument: index.html  # The default document (can be any HTML file)
+  #       ErrorDocument: error.html
+  # BucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref TargetS3Bucket
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Sid: "PublicReadGetObject"
+  #           Effect: "Allow"
+  #           Principal: "*"
+  #           Action: "s3:GetObject"
+  #           Resource: !Sub "arn:aws:s3:::${TargetS3Bucket}/*"
+
+  # backendsourcebucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: "zdjsldkfjlsjfds"
+  #     PublicAccessBlockConfiguration:
+  #       BlockPublicAcls: false
+  #       BlockPublicPolicy: false
+  #       IgnorePublicAcls: false
+  #       RestrictPublicBuckets: false
+
+
+Outputs:
+  SourceBucketName:
+    Description: S3 bucket name
+    Value: !Ref SourceS3Bucket
+  # TargetBucketName:
+  #   Description: S3 bucket name
+  #   Value: !Ref TargetS3Bucket
+  # BackendBucketName:
+  #   Description: S3 bucket name
+  #   Value: !Ref backendsourcebucket
