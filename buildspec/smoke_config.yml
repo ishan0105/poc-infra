@@ -6,4 +6,6 @@ phases:
   build:
     commands:
        - echo "---- RUNNING SMOKE TEST ----"
-       - . ./poc-infra/smoke_test_script.sh
+       - npm install axios
+       - node smoke_test_script.js
+#       - . ./poc-infra/smoke_test_script.js
