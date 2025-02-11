@@ -8,17 +8,17 @@ Resources:
         SigningBehavior: "always"  # Use "never", "no-override", or "always"
         OriginAccessControlOriginType: "s3"
         SigningProtocol: "sigv4"  # Use "sigv4" for S3 signed URLs
-  MyCloudFrontDistribution:
-    Type: "AWS::CloudFront::Distribution"
-    Properties:
-      DistributionConfig:
-        Origins:
-          - Id: "MyOrigin"
-            DomainName: "ui-artifacts-poc-zero-downtime.s3.eu-west-1.amazonaws.com"  # Replace with your S3 bucket or custom domain
-            OriginAccessControlId: "test-ui-artifacts-poc-zero-downtime"  # Attach the OAC
-            S3OriginConfig:
-              OriginAccessIdentity: ""
-            OriginAccessControlId: !Ref MyOriginAccessControl  # You can specify an OAI if using S3 origin
+#  MyCloudFrontDistribution:
+ #   Type: "AWS::CloudFront::Distribution"
+  #  Properties:
+   #   DistributionConfig:
+    #    Origins:
+     #     - Id: "MyOrigin"
+      #      DomainName: "ui-artifacts-poc-zero-downtime.s3.eu-west-1.amazonaws.com"  # Replace with your S3 bucket or custom domain
+       #     OriginAccessControlId: "test-ui-artifacts-poc-zero-downtime"  # Attach the OAC
+        #    S3OriginConfig:
+         #     OriginAccessIdentity: ""
+          #  OriginAccessControlId: !Ref MyOriginAccessControl  # You can specify an OAI if using S3 origin
 
         Enabled: "true"
         DefaultCacheBehavior:
