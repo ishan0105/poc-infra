@@ -2,16 +2,32 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: To create S3 folder and respective SSM parameter
 
 Resources:
-  SourceS3Bucket:
+
+  SourceblueS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "testcdsdfhslkdf"
+      BucketName: poc-infra-serverless-blue-UI-bucket
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
-
+  SourcegreenS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: poc-infra-serverless-green-UI-bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+Outputs:
+  SourceblueS3Bucket:
+    Description: S3 bucket name
+    Value: !Ref SourceblueS3Bucket
+  SourcegreenS3Bucket:
+    Description: S3 bucket name
+    Value: !Ref SourcegreenS3Bucket
   # TargetS3Bucket:
   #   Type: AWS::S3::Bucket
   #   Properties:
@@ -47,11 +63,6 @@ Resources:
   #       IgnorePublicAcls: false
   #       RestrictPublicBuckets: false
 
-
-Outputs:
-  SourceBucketName:
-    Description: S3 bucket name
-    Value: !Ref SourceS3Bucket
   # TargetBucketName:
   #   Description: S3 bucket name
   #   Value: !Ref TargetS3Bucket
