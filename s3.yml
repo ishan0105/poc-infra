@@ -2,7 +2,15 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: To create S3 folder and respective SSM parameter
 
 Resources:
-
+  SourceS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "testcdsdfhslkdf"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
   SourceblueS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -66,6 +74,6 @@ Outputs:
   # TargetBucketName:
   #   Description: S3 bucket name
   #   Value: !Ref TargetS3Bucket
-  # BackendBucketName:
-  #   Description: S3 bucket name
-  #   Value: !Ref backendsourcebucket
+  BackendBucketName:
+    Description: S3 bucket name
+    Value: !Ref backendsourcebucket

@@ -13,6 +13,7 @@ Resources:
       TemplateURL: ./s3.yml
       TimeoutInMinutes: 30
   cloudfront:
+    DependsOn: s3buckets
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./cloudfront.yml
